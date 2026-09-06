@@ -20,13 +20,16 @@ export interface AcquisitionTarget {
   };
 }
 
-const COMPANY_NAMES = {
-  'Technology': ['TechFlow', 'CyberNova', 'DataSync', 'CloudStack', 'Aura Systems'],
-  'Real Estate': ['Apex Holdings', 'Meridian Properties', 'Stone & Co', 'Urban Edge', 'Skyline Trust'],
+const COMPANY_NAMES: Record<BusinessIndustry, string[]> = {
+  'Software': ['TechFlow', 'CyberNova', 'DataSync', 'CloudStack', 'Aura Systems'],
+  'SaaS': ['CloudFlow', 'SyncNova', 'DataCloud', 'MetricStack', 'Aura SaaS'],
   'Retail': ['FreshMart', 'NextGen Apparel', 'Value Plus', 'Prime Goods', 'Echo Retail'],
   'Manufacturing': ['SteelCore', 'Titan Industries', 'Global Dynamics', 'Precision Forge', 'AeroMotive'],
   'Services': ['Elite Consulting', 'ProCare Services', 'Summit Solutions', 'Nexus Agency', 'BrightPath'],
-  'Energy': ['Solaris Grid', 'Volt Energy', 'NeoPower', 'Terra Resources', 'GreenFlow']
+  'Franchise': ['Burger King', 'McDonalds', 'Subway', 'KFC', 'Taco Bell'],
+  'Agriculture': ['FarmCorp', 'AgriGen', 'HarvestTech', 'CropCore', 'GreenField'],
+  'Energy': ['EcoPower', 'SolarGen', 'GreenEnergy', 'Aura Energy', 'PowerCore'],
+  'Infrastructure': ['BuildCorp', 'MetroWorks', 'CityBuild', 'CoreStruct', 'Aura Infra']
 };
 
 export function generateAcquisitionTarget(): AcquisitionTarget {

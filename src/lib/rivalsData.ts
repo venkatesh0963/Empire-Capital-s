@@ -19,18 +19,18 @@ export function calculateEmpireWars(state: GameState): MarketShareData[] {
   let playerTechRev = 0;
   let playerRealEstateRev = 0;
 
-  (state.business.ownedBusinesses || []).forEach(biz => {
+  (state.business.ownedBusinesses || []).forEach((biz: any) => {
      if (biz.industry === 'Retail') playerRetailRev += biz.lastMonthRevenue;
      if (biz.industry === 'Technology') playerTechRev += biz.lastMonthRevenue;
   });
 
-  (state.realEstate.ownedProperties || []).forEach(prop => {
+  (state.realEstate.ownedProperties || []).forEach((prop: any) => {
      playerRealEstateRev += prop.monthlyRent * prop.occupancyRate;
   });
   
   // Include city builder properties
   const { CITY_BUILDINGS } = require('./cityData');
-  (state.realEstate.cityBuildings || []).forEach(cb => {
+  (state.realEstate.cityBuildings || []).forEach((cb: any) => {
      if (cb.status === 'Operational') {
         const base = CITY_BUILDINGS.find((c: any) => c.id === cb.typeId);
         if (base) playerRealEstateRev += base.monthlyRevenue;
@@ -47,7 +47,7 @@ export function calculateEmpireWars(state: GameState): MarketShareData[] {
      const compData: { name: string; revenue: number; share: number; isLeader: boolean }[] = [];
 
      // Add AI Competitors
-     state.competitors.forEach(comp => {
+     state.competitors.forEach((comp: any) => {
         let compRev = 0;
         
         // Very basic mock logic to assign their revenue to specific industries based on their strategy

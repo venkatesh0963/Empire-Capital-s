@@ -247,7 +247,7 @@ export function Business() {
                       <div className="px-6 pb-6">
                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                             {(['CFO', 'Sales Director', 'Operations Manager', 'CTO'] as const).map(role => {
-                               const exec = (biz.executives || []).find(e => e.role === role);
+                               const exec = (biz.executives || []).find((e: any) => e.role === role);
                                if (exec) {
                                   return (
                                      <div key={exec.id} className="bg-brand-surface border border-brand-gold/20 rounded p-2 text-center relative group">

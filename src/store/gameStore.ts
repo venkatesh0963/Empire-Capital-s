@@ -12,7 +12,7 @@ import { LuxuryItem, OwnedLuxury, INITIAL_LUXURY_ITEMS } from '@/lib/luxuryData'
 import { IntellectualProperty, OwnedIP, Collectible, OwnedCollectible, INITIAL_IP, INITIAL_COLLECTIBLES } from '@/lib/alternativeData';
 import { ACHIEVEMENTS } from '@/lib/achievementsData';
 import { RANDOM_EVENTS, GameEventTemplate } from '@/lib/eventsData';
-import { Executive, generateRandomExecutive } from '@/lib/employeeData';
+import { Executive, ExecutiveRole, generateRandomExecutive } from '@/lib/employeeData';
 import { generateAcquisitionTarget, AcquisitionTarget } from '@/lib/maData';
 import { OwnedCityBuilding } from '@/lib/cityData';
 import { generateOpportunity, SpecialOpportunity } from '@/lib/opportunityData';
@@ -56,7 +56,6 @@ export interface HQState {
   modules: string[]; // e.g., 'Trading Floor', 'Research Lab', 'Executive Suite', 'Private Bank'
 }
 
-import { AcquisitionTarget } from '@/lib/maData';
 
 export interface PlayerState {
   cash: number;
@@ -75,20 +74,6 @@ export interface PlayerState {
 
 export interface TimeState { year: number; month: number; day: number; isPaused: boolean; speed: number; }
 
-export interface OwnedBusiness { executives?: any[];
-  id: string;
-  name: string;
-  industry: BusinessIndustry;
-  level: number;
-  employees: number; // Base workers
-  executives: Executive[]; // Named leadership
-  marketingBudget: number;
-  productPriceMultiplier: number;
-  lastMonthRevenue: number;
-  lastMonthExpenses: number;
-  lastMonthProfit: number;
-  brandValue: number;
-}
 
 export interface BankLoan {
   id: string; type: 'Personal' | 'Business' | 'Mortgage';
@@ -155,7 +140,9 @@ interface BankingState {
   loans: BankLoan[];
 }
 
-interface GameState {
+export interface Email { id: string; date: string; sender: string; subject: string; body: string; isRead: boolean; }
+
+export interface GameState {
   player: PlayerState;
   time: TimeState;
   market: { prices: Record<string, number>; history: Record<string, number[]> };
@@ -213,6 +200,7 @@ interface GameState {
   updateBusinessSettings: (id: string, marketing: number, priceMultiplier: number) => void;
   hireEmployee: (id: string) => void;
   fireEmployee: (id: string) => void;
+  expandBusiness: (id: string, cost: number) => boolean;
   hireExecutive: (bizId: string, role: ExecutiveRole) => void;
   fireExecutive: (bizId: string, execId: string) => void;
   buyBusinessMA: (targetId: string, offerType: 'Cash' | 'Loan' | 'Earnout', offerValue: number) => { success: boolean; message: string };

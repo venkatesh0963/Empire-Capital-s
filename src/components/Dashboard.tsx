@@ -76,7 +76,7 @@ export function Dashboard() {
   (portfolio.bonds || []).forEach(bond => {
       mktInvested += bond.principal;
       mktValue += bond.principal;
-      mktDividends += (bond.principal * bond.yieldRate) / 12;
+      const b = INITIAL_BONDS.find(x => x.id === bond.bondId); if (b) mktDividends += (bond.principal * b.yieldRate) / 12;
   });
   const mktProfit = mktValue - mktInvested;
 
