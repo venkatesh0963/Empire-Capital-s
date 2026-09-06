@@ -10,6 +10,17 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  --color-brand-bg: #F8F9FB;
+  --color-brand-surface: #F1F4F9;
+  --color-brand-card: #FFFFFF;
+  --color-brand-text: #0F172A;
+  --color-brand-muted: #64748B;
+  --color-brand-profit: #059669;
+  --color-brand-loss: #E11D48;
+  --color-brand-gold: #D97706;
+  --color-brand-blue: #2563EB;
+  --color-brand-purple: #7C3AED;
 }
 
 @media (prefers-color-scheme: dark) {
