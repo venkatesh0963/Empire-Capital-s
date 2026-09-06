@@ -53,7 +53,7 @@ export function GlobalView() {
      realEstate.ownedProperties.forEach((p, i) => {
         if (i % unlockedCities.length === cityIndex) {
            regionalProps++;
-           regionalRev += p.revenue;
+           regionalRev += p.monthlyRent;
         }
      });
 

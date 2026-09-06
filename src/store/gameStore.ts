@@ -474,7 +474,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
         let activeCatalyst: typeof STOCK_CATALYSTS[0] | null = null;
         if (Math.random() < 0.05) { // 5% chance daily for a major news catalyst
            activeCatalyst = STOCK_CATALYSTS[Math.floor(Math.random() * STOCK_CATALYSTS.length)];
-           news.unshift({ id: `news_${Date.now()}_${activeCatalyst.id}`, date: `Y${year} M${month} D${day}`, headline: activeCatalyst.headline, type: activeCatalyst.impactMultiplier > 1 ? 'positive' : 'negative' });
+           news.unshift({ id: `news_${Date.now()}_${activeCatalyst.id}`, date: `Y${year} M${month} D${day}`, headline: activeCatalyst.headline, type: (activeCatalyst.impactMultiplier > 1 ? 'positive' : 'negative') as 'positive' | 'negative' });
         }
 
         INITIAL_STOCKS.forEach(stock => {
@@ -615,7 +615,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
                 if (newDays <= 0) {
                    const base = CITY_BUILDINGS.find((cb: any) => cb.id === b.typeId);
                    news.unshift({ id: `news_cb_${Date.now()}`, date: `Y${year} M${month}`, headline: `🏗️ Construction complete! Your ${base?.name} is now operational.`, type: 'positive' });
-                   return { ...b, status: 'Operational', daysUntilComplete: 0 };
+                   return { ...b, status: 'Operational' as 'Operational', daysUntilComplete: 0 };
                 }
                 return { ...b, daysUntilComplete: newDays };
              } else {
@@ -687,11 +687,11 @@ const avgTaxRate = totalTax / unlockedCities.length;
 
           let totalEarnoutPayments = 0;
           const updatedEarnouts = (state.business.earnouts || []).map(earnout => {
-             if (earnout.remainingBalance <= 0) return earnout;
-             const payment = Math.min(earnout.monthlyPayment, earnout.remainingBalance);
+             if ((earnout.remainingBalance || 0) <= 0) return earnout;
+             const payment = Math.min(earnout.monthlyPayment, (earnout.remainingBalance || 0));
              totalEarnoutPayments += payment;
-             return { ...earnout, remainingBalance: earnout.remainingBalance - payment };
-          }).filter(e => e.remainingBalance > 0);
+             return { ...earnout, remainingBalance: (earnout.remainingBalance || 0) - payment };
+          }).filter(e => (e.remainingBalance || 0) > 0);
 
           let bondIncome = 0;
           state.portfolio.bonds.forEach(bond => {
@@ -907,7 +907,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
 
           const totalDebtAmt = updatedLoans.reduce((sum, l) => sum + l.remainingBalance, 0);
           checkAchievement('debt_5m', totalDebtAmt >= 5000000);
-          checkAchievement('lux_jet', updatedLuxury.some(l => l?.name?.toLowerCase().includes('jet')));
+          checkAchievement('lux_jet', updatedLuxury.some(l => l?.itemId?.toLowerCase().includes('jet')));
 
           return {
             time: { ...state.time, year, month, day },
@@ -931,7 +931,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
             banking: { ...state.banking, loans: updatedLoans },
             maMarket: { targets: newMATargets },
             economy,
-            news,
+            news: news as any,
             competitors: updatedCompetitors,
             founder: { playerStartups: updatedPlayerStartups },
             inbox: updatedInbox,
@@ -1310,6 +1310,23 @@ const avgTaxRate = totalTax / unlockedCities.length;
 
       updateBusinessSettings: (id, marketing, priceMultiplier) => set((state) => ({ business: { ...state.business, ownedBusinesses: state.business.ownedBusinesses.map(biz => biz.id === id ? { ...biz, marketingBudget: marketing, productPriceMultiplier: priceMultiplier } : biz) } })),
       hireEmployee: (id) => set((state) => ({ business: { ...state.business, ownedBusinesses: state.business.ownedBusinesses.map(biz => biz.id === id ? { ...biz, employees: biz.employees + 1 } : biz) } })),
+            expandBusiness: (id: string, cost: number) => {
+         const state = get();
+         const biz = state.business.ownedBusinesses.find(b => b.id === id);
+         if (biz && state.player.cash >= cost) {
+            set({
+               player: { ...state.player, cash: state.player.cash - cost },
+               business: {
+                  ...state.business,
+                  ownedBusinesses: state.business.ownedBusinesses.map(b => 
+                     b.id === id ? { ...b, level: (b.level || 1) + 1 } : b
+                  )
+               }
+            });
+            return true;
+         }
+         return false;
+      },
       fireEmployee: (id) => set((state) => ({ business: { ...state.business, ownedBusinesses: state.business.ownedBusinesses.map(biz => biz.id === id && biz.employees > 1 ? { ...biz, employees: biz.employees - 1 } : biz) } })),
       
       hireExecutive: (bizId, role) => set((state) => {
