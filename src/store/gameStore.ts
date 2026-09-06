@@ -266,7 +266,7 @@ export const useGameStore = create<GameState>()(
       banking: { loans: [] },
       economy: { ...INITIAL_ECONOMY_STATE },
       competitors: [...INITIAL_COMPETITORS],
-      news: [{ id: 'init', date: 'Y1 M1', headline: 'Welcome to Empire Builder! You have been granted $100,000 to start your journey.', type: 'positive' }],
+      news: [{ id: 'init', date: 'Y1 M1', headline: 'Welcome to Empire Builder! You have been granted $100,000 to start your journey.', type: 'positive' as 'positive' }],
       maMarket: { targets: [] },
       activeOpportunities: [],
 
@@ -439,7 +439,7 @@ export const useGameStore = create<GameState>()(
         const deadStartups = updatedPlayerStartups.filter(s => s.cash <= 0 && s.daysActive > 14);
         if (deadStartups.length > 0) {
             deadStartups.forEach(ds => {
-                news.unshift({ id: `n_bankrupt_${Date.now()}_${ds.id}`, date: `Y${year} M${month}`, headline: `⚠️ Startup Failed: ${ds.name} ran out of cash and shut down.`, type: 'negative' });
+                news.unshift({ id: `n_bankrupt_${Date.now()}_${ds.id}`, date: `Y${year} M${month}`, headline: `⚠️ Startup Failed: ${ds.name} ran out of cash and shut down.`, type: 'negative' as 'negative' });
             });
             updatedPlayerStartups = updatedPlayerStartups.filter(s => s.cash > 0 || s.daysActive <= 14);
         }
@@ -537,7 +537,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
         if (Math.random() < 0.05 && updatedOpportunities.length < 3) { // 5% chance daily
            const newOpp = generateOpportunity();
            updatedOpportunities.push(newOpp);
-           news.unshift({ id: `n_opp_${Date.now()}`, date: `Y${year} M${month}`, headline: `💎 OPPORTUNITY: ${newOpp.title} available for the next ${newOpp.daysRemaining} days!`, type: 'positive' });
+           news.unshift({ id: `n_opp_${Date.now()}`, date: `Y${year} M${month}`, headline: `💎 OPPORTUNITY: ${newOpp.title} available for the next ${newOpp.daysRemaining} days!`, type: 'positive' as 'positive' });
         }
 
         if (day > 30) {
@@ -582,7 +582,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
                   else if (newState === 'CRISIS') { economy.demandMultiplier = 0.6; economy.inflationMultiplier = 1.2; economy.interestRateBase = 0.08; headline = '🚨 ECONOMIC CRISIS. Stagflation hits the markets hard!'; }
                   
                   economy.status = newState;
-                  news.unshift({ id: `n_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, date: `Y${year} M${month}`, headline, type: 'economy' });
+                  news.unshift({ id: `n_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, date: `Y${year} M${month}`, headline, type: 'economy' as 'economy' });
                   if (news.length > 15) news.pop();
               }
           }
@@ -614,7 +614,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
                 const newDays = b.daysUntilComplete - 30; // Roughly a month
                 if (newDays <= 0) {
                    const base = CITY_BUILDINGS.find((cb: any) => cb.id === b.typeId);
-                   news.unshift({ id: `news_cb_${Date.now()}`, date: `Y${year} M${month}`, headline: `🏗️ Construction complete! Your ${base?.name} is now operational.`, type: 'positive' });
+                   news.unshift({ id: `news_cb_${Date.now()}`, date: `Y${year} M${month}`, headline: `🏗️ Construction complete! Your ${base?.name} is now operational.`, type: 'positive' as 'positive' });
                    return { ...b, status: 'Operational' as 'Operational', daysUntilComplete: 0 };
                 }
                 return { ...b, daysUntilComplete: newDays };
@@ -720,10 +720,10 @@ const avgTaxRate = totalTax / unlockedCities.length;
               if (isSuccess) {
                  const payout = su.exitValue;
                  newCash += payout;
-                 news.unshift({ id: `n_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, date: `Y${year} M${month}`, headline: `🚀 ${su.name} went public! Your equity paid out $${payout.toLocaleString()}.`, type: 'positive' });
+                 news.unshift({ id: `n_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, date: `Y${year} M${month}`, headline: `🚀 ${su.name} went public! Your equity paid out $${payout.toLocaleString()}.`, type: 'positive' as 'positive' });
                  return { ...su, monthsRemaining: 0, status: 'IPO' };
               } else {
-                 news.unshift({ id: `n_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, date: `Y${year} M${month}`, headline: `📉 ${su.name} went bankrupt. You lost your $${su.investedAmount.toLocaleString()} investment.`, type: 'negative' });
+                 news.unshift({ id: `n_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, date: `Y${year} M${month}`, headline: `📉 ${su.name} went bankrupt. You lost your $${su.investedAmount.toLocaleString()} investment.`, type: 'negative' as 'negative' });
                  return { ...su, monthsRemaining: 0, status: 'Bankrupt', exitValue: 0 };
               }
             }
@@ -782,7 +782,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
              failedPayment = true;
              newCreditScore = Math.max(300, newCreditScore - 20);
              newCash -= 50; 
-             news.unshift({ id: `n_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, date: `Y${year} M${month}`, headline: 'Overdraft! Bank charged a $50 fee and your credit score dropped.', type: 'negative' });
+             news.unshift({ id: `n_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, date: `Y${year} M${month}`, headline: 'Overdraft! Bank charged a $50 fee and your credit score dropped.', type: 'negative' as 'negative' });
              if (news.length > 15) news.pop();
           } else if (updatedLoans.length > 0 && !failedPayment && Math.random() > 0.7) {
              newCreditScore = Math.min(850, newCreditScore + 2);
@@ -798,7 +798,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
              year++; 
              // Yearly base inflation to punish holding raw cash
              economy.inflationMultiplier = Number((economy.inflationMultiplier * 1.03).toFixed(3)); 
-             news.unshift({ id: `n_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, date: `Y${year} M1`, headline: `Happy New Year! Annual inflation applied. Cash holding is riskier.`, type: 'economy' });
+             news.unshift({ id: `n_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, date: `Y${year} M1`, headline: `Happy New Year! Annual inflation applied. Cash holding is riskier.`, type: 'economy' as 'economy' });
              if (news.length > 15) news.pop();
 
              // Random Interactive Event trigger (30% chance per year)
@@ -829,7 +829,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
              newXp -= xpRequired;
              newLevel++;
              newSkillPoints += 1;
-             news.unshift({ id: `n_${Date.now()}_lvl`, date: `Y${year} M${month}`, headline: `🎉 LEVEL UP! You are now a Level ${newLevel} CEO. You gained 1 Skill Point.`, type: 'positive' });
+             news.unshift({ id: `n_${Date.now()}_lvl`, date: `Y${year} M${month}`, headline: `🎉 LEVEL UP! You are now a Level ${newLevel} CEO. You gained 1 Skill Point.`, type: 'positive' as 'positive' });
           }
           
           let newMarketListings = [...state.realEstate.marketListings];
@@ -848,13 +848,13 @@ const avgTaxRate = totalTax / unlockedCities.length;
                     newHoldings.realEstate += 1;
                     newMonthlyRevenue += 20000 + (Math.random() * 50000);
                     if (Math.random() < 0.3) {
-                       news.unshift({ id: `n_comp_${Date.now()}_${comp.id}`, date: `Y${year} M${month}`, headline: `🏢 COMPETITOR: ${comp.name} just acquired another major commercial property.`, type: 'neutral' });
+                       news.unshift({ id: `n_comp_${Date.now()}_${comp.id}`, date: `Y${year} M${month}`, headline: `🏢 COMPETITOR: ${comp.name} just acquired another major commercial property.`, type: 'neutral' as 'neutral' });
                     }
                  } else if (comp.strategy === 'Aggressive acquisitions' || comp.strategy === 'Technology') {
                     newHoldings.businesses += 1;
                     newMonthlyRevenue += 50000 + (Math.random() * 150000);
                     if (Math.random() < 0.3) {
-                       news.unshift({ id: `n_comp_${Date.now()}_${comp.id}`, date: `Y${year} M${month}`, headline: `💼 COMPETITOR: ${comp.name} acquired a new ${comp.holdings.focusIndustry || 'startup'} business.`, type: 'neutral' });
+                       news.unshift({ id: `n_comp_${Date.now()}_${comp.id}`, date: `Y${year} M${month}`, headline: `💼 COMPETITOR: ${comp.name} acquired a new ${comp.holdings.focusIndustry || 'startup'} business.`, type: 'neutral' as 'neutral' });
                     }
                  }
               }
@@ -874,7 +874,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
                 unlockedAchievements.push({ id, date: `Y${year} M${month}`, claimed: false });
                 const ach = ACHIEVEMENTS.find(a => a.id === id);
                 if (ach) {
-                   news.unshift({ id: `n_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, date: `Y${year} M${month}`, headline: `🏆 ACHIEVEMENT UNLOCKED: ${ach.name} - ${ach.description} (Reward: $${ach.reward.toLocaleString()} waiting to be claimed!)`, type: 'positive' });
+                   news.unshift({ id: `n_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, date: `Y${year} M${month}`, headline: `🏆 ACHIEVEMENT UNLOCKED: ${ach.name} - ${ach.description} (Reward: $${ach.reward.toLocaleString()} waiting to be claimed!)`, type: 'positive' as 'positive' });
                 }
              }
           };
@@ -1266,7 +1266,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
                const newOwned: OwnedProperty = { ...property, purchasePrice: finalPrice, purchaseDate: `Y${state.time.year} M${state.time.month}`, occupancyRate: 0.95 };
                set((state) => ({
                    player: { ...state.player, cash: state.player.cash - finalPrice },
-                   realEstate: { marketListings: state.realEstate.marketListings.filter(p => p.id !== id), ownedProperties: [...state.realEstate.ownedProperties, newOwned] }
+                   realEstate: { marketListings: state.realEstate.marketListings.filter(p => p.id !== id), ownedProperties: [...state.realEstate.ownedProperties, newOwned], cityBuildings: state.realEstate.cityBuildings || [] }
                }));
                get().recalculateNetWorth();
                return true;
@@ -1344,7 +1344,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
          updatedBusinesses[bizIndex] = updatedBiz;
          
          const newNews = [...state.news];
-         newNews.unshift({ id: `n_${Date.now()}_exec`, date: `Y${state.time.year} M${state.time.month}`, headline: `Hired ${newExec.name} as ${role} for ${biz.name}.`, type: 'positive' });
+         newNews.unshift({ id: `n_${Date.now()}_exec`, date: `Y${state.time.year} M${state.time.month}`, headline: `Hired ${newExec.name} as ${role} for ${biz.name}.`, type: 'positive' as 'positive' });
          if (newNews.length > 15) newNews.pop();
 
          return { business: { ...state.business, ownedBusinesses: updatedBusinesses }, news: newNews };
@@ -1449,7 +1449,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
             banking: { ...state.banking, loans: newLoans },
             business: { ...state.business, ownedBusinesses: [...state.business.ownedBusinesses, newBusiness], earnouts: newEarnouts },
             maMarket: { targets: newTargets },
-            news: [{ id: `n_${Date.now()}_ma`, date: `Y${state.time.year} M${state.time.month}`, headline: `Acquired ${target.name} for $${offerValue.toLocaleString()} via ${offerType}`, type: 'positive' }, ...state.news].slice(0,15)
+            news: [{ id: `n_${Date.now()}_ma`, date: `Y${state.time.year} M${state.time.month}`, headline: `Acquired ${target.name} for $${offerValue.toLocaleString()} via ${offerType}`, type: 'positive' as 'positive' }, ...state.news].slice(0,15)
          }));
          
          get().recalculateNetWorth();
@@ -1604,7 +1604,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
         newAchievements[achIndex] = { ...achRef, claimed: true };
 
         const newNews = [...state.news];
-        newNews.unshift({ id: `n_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, date: `Y${state.time.year} M${state.time.month}`, headline: `💰 CLAIMED: $${baseAch.reward.toLocaleString()} added to your account for completing ${baseAch.name}!`, type: 'positive' });
+        newNews.unshift({ id: `n_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, date: `Y${state.time.year} M${state.time.month}`, headline: `💰 CLAIMED: $${baseAch.reward.toLocaleString()} added to your account for completing ${baseAch.name}!`, type: 'positive' as 'positive' });
         if (newNews.length > 15) newNews.pop();
 
         return { 
@@ -1636,7 +1636,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
               break;
         }
 
-        newNews.unshift({ id: `n_${Date.now()}_evt`, date: `Y${state.time.year} M${state.time.month}`, headline: `Action Taken: Responded to ${state.player.activeEvent.title}.`, type: 'economy' });
+        newNews.unshift({ id: `n_${Date.now()}_evt`, date: `Y${state.time.year} M${state.time.month}`, headline: `Action Taken: Responded to ${state.player.activeEvent.title}.`, type: 'economy' as 'economy' });
         if (newNews.length > 15) newNews.pop();
 
         return {
@@ -1697,7 +1697,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
         startupMarket: { pitches: initialStartups },
         portfolio: { stocks: {}, crypto: {}, commodities: {}, bonds: [], startups: [], luxury: [], ip: [], collectibles: [] }, 
         realEstate: { marketListings: initialProperties, ownedProperties: [], cityBuildings: [] }, business: { ownedBusinesses: [], earnouts: [] }, founder: { playerStartups: [] }, inbox: [{ id: 'welcome_email', date: 'Y1 M1 D1', sender: 'Victor King', subject: 'Welcome to the big leagues', body: 'I heard you just got $100,000 in seed capital. Don\'t lose it all in one place. If you ever want to sell a company, give me a call.', isRead: false }], isPhoneOpen: false, banking: { loans: [] },
-        economy: { ...INITIAL_ECONOMY_STATE }, competitors: [...INITIAL_COMPETITORS], news: [{ id: 'init', date: 'Y1 M1', headline: 'Welcome to Empire Builder! You have been granted $100,000 to start your journey.', type: 'positive' }]
+        economy: { ...INITIAL_ECONOMY_STATE }, competitors: [...INITIAL_COMPETITORS], news: [{ id: 'init', date: 'Y1 M1', headline: 'Welcome to Empire Builder! You have been granted $100,000 to start your journey.', type: 'positive' as 'positive' }]
       });
       },
 
