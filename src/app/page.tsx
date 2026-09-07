@@ -9,6 +9,7 @@ import { VenturesView } from '@/components/VenturesView';
 import { AlternativeView } from '@/components/AlternativeView';
 import { LuxuryView } from '@/components/LuxuryView';
 import { Bank } from '@/components/Bank';
+import LendingView from '@/components/LendingView';
 import { AchievementsView } from '@/components/AchievementsView';
 import { CEOView } from '@/components/CEOView';
 import { HQView } from '@/components/HQView';
@@ -62,6 +63,7 @@ export default function Home() {
         {currentView === 'alternative' && <AlternativeView />}
         {currentView === 'luxury' && <LuxuryView />}
         {currentView === 'bank' && <Bank />}
+        {currentView === 'lending' && <LendingView />}
         {currentView === 'achievements' && <AchievementsView />}
       </GameLayout>
     </>

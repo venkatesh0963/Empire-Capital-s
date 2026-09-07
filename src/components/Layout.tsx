@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Home, LayoutDashboard, TrendingUp, Briefcase, Building, Landmark, Gem, Crown, Sparkles, Trophy, User, Building2, Globe, Swords, Rocket } from 'lucide-react';
+import { Home, LayoutDashboard, TrendingUp, Briefcase, Building, Landmark, Gem, Crown, Sparkles, Trophy, User, Building2, Globe, Swords, Rocket, HandCoins } from 'lucide-react';
 import { useGameStore } from '@/store/gameStore';
 import { Smartphone } from './Smartphone';
 import { Smartphone as PhoneIcon } from 'lucide-react';
@@ -30,6 +30,7 @@ export function GameLayout({ children, currentView, setView }: { children: React
     { id: 'startuplab', label: 'Startup Lab', icon: Rocket },
     { id: 'ventures', label: 'Acquisitions & PE', icon: Briefcase },
     { id: 'global', label: 'Global Expansion', icon: Globe },
+    { id: 'lending', label: 'Lend Money', icon: HandCoins },
     { id: 'bank', label: 'Banking & Debt', icon: Landmark },
     { id: 'exchanges', label: 'Exchanges & Markets', icon: TrendingUp },
     { id: 'alternative', label: 'Real Estate & Assets', icon: Building },

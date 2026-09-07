@@ -136,8 +136,34 @@ export interface BusinessState {
   earnouts: Earnout[];
 }
 
+export interface LendedLoan {
+  id: string;
+  borrowerName: string;
+  purpose: string;
+  principal: number;
+  remainingBalance: number;
+  interestRate: number;
+  monthlyPayment: number;
+  termMonths: number;
+  monthsPaid: number;
+  status: 'active' | 'defaulted' | 'paid_off';
+}
+
+export interface LoanApplication {
+  id: string;
+  borrowerName: string;
+  creditScore: number;
+  purpose: string;
+  requestedAmount: number;
+  termMonths: number;
+  maxInterestRate: number;
+  expiresInDays: number;
+}
+
 interface BankingState {
   loans: BankLoan[];
+  lendedLoans: LendedLoan[];
+  loanApplications: LoanApplication[];
 }
 
 export interface Email { id: string; date: string; sender: string; subject: string; body: string; isRead: boolean; }
@@ -207,6 +233,8 @@ export interface GameState {
   refreshMAMarket: () => void;
   upgradeHQ: () => boolean;
   buildHQModule: (module: string, cost: number) => boolean;
+  approveLendLoan: (appId: string, interestRate: number) => { success: boolean; message: string };
+  rejectLendLoan: (appId: string) => void;
   takeLoan: (amount: number, termYears: number, type: BankLoan['type']) => boolean;
   payDownLoan: (id: string, amount: number) => boolean;
   claimAchievementReward: (id: string) => void;
@@ -263,7 +291,7 @@ export const useGameStore = create<GameState>()(
       realEstate: { marketListings: initialProperties, ownedProperties: [], cityBuildings: [] },
       business: { ownedBusinesses: [], earnouts: [] },
       founder: { playerStartups: [] }, inbox: [{ id: 'welcome_email', date: 'Y1 M1 D1', sender: 'Victor King', subject: 'Welcome to the big leagues', body: 'I heard you just got $100,000 in seed capital. Don\'t lose it all in one place. If you ever want to sell a company, give me a call.', isRead: false }], isPhoneOpen: false,
-      banking: { loans: [] },
+      banking: { loans: [], lendedLoans: [], loanApplications: [] },
       economy: { ...INITIAL_ECONOMY_STATE },
       competitors: [...INITIAL_COMPETITORS],
       news: [{ id: 'init', date: 'Y1 M1', headline: 'Welcome to Empire Builder! You have been granted $100,000 to start your journey.', type: 'positive' as 'positive' }],
@@ -691,7 +719,69 @@ const avgTaxRate = totalTax / unlockedCities.length;
           let totalLoanPayments = 0;
           let failedPayment = false;
 
-          const updatedLoans = state.banking.loans.map(loan => {
+          
+        // --- LENDING PAYMENTS ---
+        let updatedLendedLoans = [...(state.banking.lendedLoans || [])];
+        let updatedLoanApps = [...(state.banking.loanApplications || [])];
+        let lendedPayments = 0;
+        let lendedDefaults = 0;
+
+        if (day === 1) {
+           updatedLendedLoans = updatedLendedLoans.map(loan => {
+              if (loan.status !== 'active') return loan;
+              
+              // Default check
+              const defaultChance = loan.interestRate > 0.15 ? 0.05 : 0.01;
+              if (Math.random() < defaultChance) {
+                 lendedDefaults += loan.remainingBalance;
+                 news.unshift({ id: `n_def_${Date.now()}_${loan.id}`, date: `Y${year} M${month}`, headline: `⚠️ Borrower Defaulted: ${loan.borrowerName} defaulted on their loan. You lost ${loan.remainingBalance.toLocaleString()}.`, type: 'negative' as const });
+                 return { ...loan, status: 'defaulted' };
+              }
+
+              lendedPayments += loan.monthlyPayment;
+              const newBalance = loan.remainingBalance - loan.monthlyPayment;
+              
+              if (newBalance <= 0) {
+                 news.unshift({ id: `n_poff_${Date.now()}_${loan.id}`, date: `Y${year} M${month}`, headline: `✅ Loan Paid Off: ${loan.borrowerName} successfully paid off their loan!`, type: 'positive' as const });
+                 return { ...loan, remainingBalance: 0, monthsPaid: loan.monthsPaid + 1, status: 'paid_off' };
+              }
+              
+              return { ...loan, remainingBalance: newBalance, monthsPaid: loan.monthsPaid + 1 };
+           });
+
+           newCash += lendedPayments;
+        }
+
+        // expire old ones
+        updatedLoanApps = updatedLoanApps.map(app => ({ ...app, expiresInDays: app.expiresInDays - 1 })).filter(app => app.expiresInDays > 0);
+        
+        // randomly add new ones
+        if (Math.random() < 0.1 && updatedLoanApps.length < 5) {
+           const names = ["Emily Chen", "Marcus Johnson", "TechNova Inc.", "Sarah Williams", "GreenScape Landscaping", "David Rodriguez", "Horizon Enterprises"];
+           const purposes = ["Business Expansion", "Medical Bills", "Real Estate Investment", "Debt Consolidation", "Startup Capital"];
+           const rName = names[Math.floor(Math.random() * names.length)];
+           const rPurpose = purposes[Math.floor(Math.random() * purposes.length)];
+           
+           const isBusiness = rName.includes("Inc.") || rName.includes("Enterprises") || rName.includes("Landscaping");
+           const credit = Math.floor(Math.random() * 350) + 450; // 450 - 800
+           const amount = isBusiness ? (Math.floor(Math.random() * 10) + 1) * 50000 : (Math.floor(Math.random() * 10) + 1) * 5000;
+           
+           // Max rate they accept based on credit score
+           const maxRate = credit > 750 ? 0.08 : credit > 650 ? 0.12 : credit > 550 ? 0.18 : 0.25;
+
+           updatedLoanApps.push({
+              id: `app_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+              borrowerName: rName,
+              purpose: rPurpose,
+              creditScore: credit,
+              requestedAmount: amount,
+              termMonths: [12, 24, 36, 48, 60][Math.floor(Math.random() * 5)],
+              maxInterestRate: maxRate,
+              expiresInDays: Math.floor(Math.random() * 7) + 3
+           });
+        }
+
+        const updatedLoans = state.banking.loans.map(loan => {
              if (loan.remainingBalance <= 0) return loan;
              totalLoanPayments += loan.monthlyPayment;
              const interestPortion = loan.remainingBalance * (loan.interestRate / 12);
@@ -942,7 +1032,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
             commoditiesMarket: comState,
             realEstate: { ...state.realEstate, marketListings: newMarketListings, ownedProperties: updatedOwnedProperties, cityBuildings: updatedCityBuildings },
             business: { ...state.business, ownedBusinesses: updatedBusinesses, earnouts: updatedEarnouts },
-            banking: { ...state.banking, loans: updatedLoans },
+            banking: { ...state.banking, loans: updatedLoans, lendedLoans: updatedLendedLoans, loanApplications: updatedLoanApps },
             maMarket: { targets: newMATargets },
             economy,
             news: news as any,
@@ -1511,6 +1601,50 @@ const avgTaxRate = totalTax / unlockedCities.length;
          return false;
       },
 
+      approveLendLoan: (appId, interestRate) => {
+         const state = get();
+         const app = state.banking.loanApplications?.find(a => a.id === appId);
+         if (!app) return { success: false, message: 'Application not found' };
+         if (state.player.cash < app.requestedAmount) return { success: false, message: 'Not enough cash to fund this loan' };
+         if (interestRate > app.maxInterestRate) return { success: false, message: 'The borrower rejected your interest rate offer.' };
+
+         const monthlyRate = interestRate / 12;
+         const monthlyPayment = (app.requestedAmount * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -app.termMonths));
+
+         const newLoan = {
+            id: `lended_${Math.random().toString(36).substr(2, 9)}`,
+            borrowerName: app.borrowerName,
+            purpose: app.purpose,
+            principal: app.requestedAmount,
+            remainingBalance: app.requestedAmount,
+            interestRate,
+            monthlyPayment,
+            termMonths: app.termMonths,
+            monthsPaid: 0,
+            status: 'active' as const
+         };
+
+         set(state => ({
+            player: { ...state.player, cash: state.player.cash - app.requestedAmount },
+            banking: {
+               ...state.banking,
+               lendedLoans: [...(state.banking.lendedLoans || []), newLoan],
+               loanApplications: state.banking.loanApplications?.filter(a => a.id !== appId) || []
+            }
+         }));
+         get().recalculateNetWorth();
+         return { success: true, message: 'Loan funded successfully!' };
+      },
+
+      rejectLendLoan: (appId) => {
+         set(state => ({
+            banking: {
+               ...state.banking,
+               loanApplications: state.banking.loanApplications?.filter(a => a.id !== appId) || []
+            }
+         }));
+      },
+
       takeLoan: (amount, termYears, type) => {
           const state = get();
           const baseRate = state.economy.interestRateBase;
@@ -1523,7 +1657,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
           const monthlyRate = interestRate / 12;
           const monthlyPayment = (amount * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -termMonths));
           const newLoan: BankLoan = { id: `loan_${Math.random().toString(36).substr(2, 9)}`, type, principal: amount, remainingBalance: amount, interestRate, monthlyPayment, termMonths, monthsPaid: 0 };
-          set(state => ({ player: { ...state.player, cash: state.player.cash + amount }, banking: { loans: [...state.banking.loans, newLoan] } }));
+          set(state => ({ player: { ...state.player, cash: state.player.cash + amount }, banking: { ...state.banking, loans: [...state.banking.loans, newLoan] } }));
           get().recalculateNetWorth();
           return true;
       },
@@ -1536,7 +1670,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
               const newLoans = [...state.banking.loans];
               if (amount >= loan.remainingBalance) newLoans.splice(loanIndex, 1);
               else newLoans[loanIndex] = { ...loan, remainingBalance: loan.remainingBalance - amount };
-              set(state => ({ player: { ...state.player, cash: state.player.cash - amount }, banking: { loans: newLoans } }));
+              set(state => ({ player: { ...state.player, cash: state.player.cash - amount }, banking: { ...state.banking, loans: newLoans } }));
               get().recalculateNetWorth();
               return true;
           }
@@ -1710,7 +1844,7 @@ const avgTaxRate = totalTax / unlockedCities.length;
         commoditiesMarket: { prices: initialCommodityPrices, history: initialCommodityHistory },
         startupMarket: { pitches: initialStartups },
         portfolio: { stocks: {}, crypto: {}, commodities: {}, bonds: [], startups: [], luxury: [], ip: [], collectibles: [] }, 
-        realEstate: { marketListings: initialProperties, ownedProperties: [], cityBuildings: [] }, business: { ownedBusinesses: [], earnouts: [] }, founder: { playerStartups: [] }, inbox: [{ id: 'welcome_email', date: 'Y1 M1 D1', sender: 'Victor King', subject: 'Welcome to the big leagues', body: 'I heard you just got $100,000 in seed capital. Don\'t lose it all in one place. If you ever want to sell a company, give me a call.', isRead: false }], isPhoneOpen: false, banking: { loans: [] },
+        realEstate: { marketListings: initialProperties, ownedProperties: [], cityBuildings: [] }, business: { ownedBusinesses: [], earnouts: [] }, founder: { playerStartups: [] }, inbox: [{ id: 'welcome_email', date: 'Y1 M1 D1', sender: 'Victor King', subject: 'Welcome to the big leagues', body: 'I heard you just got $100,000 in seed capital. Don\'t lose it all in one place. If you ever want to sell a company, give me a call.', isRead: false }], isPhoneOpen: false, banking: { loans: [], lendedLoans: [], loanApplications: [] },
         economy: { ...INITIAL_ECONOMY_STATE }, competitors: [...INITIAL_COMPETITORS], news: [{ id: 'init', date: 'Y1 M1', headline: 'Welcome to Empire Builder! You have been granted $100,000 to start your journey.', type: 'positive' as 'positive' }]
       });
       },
